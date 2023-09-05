@@ -16,7 +16,9 @@
 #' @importFrom magrittr %>%
 #'
 #' @examples
+#' \dontrun{
 #' gsi_dat <- prep_gsi_data(mixture_data = mix, baseline_data = base_templin, pop_info = templin_pops211)
+#' }
 #'
 #' @export
 prep_gsi_data <-
