@@ -16,9 +16,8 @@
 #' @importFrom magrittr %>%
 #'
 #' @examples
-#' \dontrun{
-#' gsi_dat <- prep_gsi_data(mixture_data = mix, baseline_data = base_templin, pop_info = templin_pops211)
-#' }
+#' # prep input data
+#' gsi_data <- prep_gsi_data(mixture_data = mix, baseline_data = base, pop_info = pops211)
 #'
 #' @export
 prep_gsi_data <-
@@ -45,6 +44,7 @@ prep_gsi_data <-
     error_message <- check_loci_pops(loci, loci_base, loci_mix)
 
     if ("all good" %in% error_message) {
+      loci <- loci_base
       message("Compiling input data, may take a minute or two...")
     } else {
       stop(error_message)
