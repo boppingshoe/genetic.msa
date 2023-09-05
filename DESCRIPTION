@@ -21,3 +21,6 @@ Imports:
     tidyr
 URL: https://github.com/boppingshoe/genetic.msa
 BugReports: https://github.com/boppingshoe/genetic.msa/issues
+Depends: 
+    R (>= 2.10)
+LazyData: true

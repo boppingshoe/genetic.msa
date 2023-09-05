@@ -23,9 +23,11 @@
 #' @importFrom foreach %dopar%
 #'
 #' @examples
-#' \dontrun{
+#' # prep input data
+#' gsi_data <- prep_gsi_data(mixture_data = mix, baseline_data = base, pop_info = pops211)
+#'
+#' # run model
 #' gsi_out <- gsi_mdl(gsi_data, 10, 5, 1, 4)
-#' }
 #'
 #' @export
 gsi_mdl <- function(dat_in, nreps, nburn, thin, nchains, nadapt = 0, keep_burn = FALSE, cond_gsi = TRUE, file = NULL, seed = NULL) {
