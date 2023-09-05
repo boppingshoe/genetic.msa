@@ -19,3 +19,5 @@ Imports:
     magrittr,
     parallel,
     tidyr
+URL: https://github.com/boppingshoe/genetic.msa
+BugReports: https://github.com/boppingshoe/genetic.msa/issues
