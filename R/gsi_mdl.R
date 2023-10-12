@@ -253,8 +253,8 @@ gsi_mdl <- function(dat_in, nreps, nburn, thin, nchains, nadapt = 0, keep_burn =
   summ_pop <-
     lapply(p_combo, function(rlist) rlist[keep_list,]) %>%
     dplyr::bind_rows() %>%
-    tidyr::pivot_longer(cols = 1:ncol(.)) %>%
-    dplyr::group_by(name) %>%
+    tidyr::pivot_longer(cols = 1:ncol(.), names_to = "group") %>%
+    dplyr::group_by(group) %>%
     dplyr::summarise(
       mean = mean(value),
       median = stats::median(value),
@@ -268,8 +268,7 @@ gsi_mdl <- function(dat_in, nreps, nburn, thin, nchains, nadapt = 0, keep_burn =
         coda::gelman.diag(mc_pop,
                           transform = FALSE,
                           autoburnin = FALSE,
-                          multivariate = FALSE)$psrf[, "Point est."] %>%
-          .[order(grp_names)]
+                          multivariate = FALSE)$psrf[, "Point est."]
       } else {NA}},
       mpsrf = {if (nchains > 1) {
         my.gelman.diag(mc_pop,
@@ -277,13 +276,11 @@ gsi_mdl <- function(dat_in, nreps, nburn, thin, nchains, nadapt = 0, keep_burn =
                        # autoburnin = FALSE,
                        multivariate = TRUE)$mpsrf
       } else {NA}},
-      n_eff = coda::effectiveSize(mc_pop) %>%
-        .[order(grp_names)]
+      n_eff = coda::effectiveSize(mc_pop)
     ) %>%
-    dplyr::mutate(name_fac = factor(name, levels = grp_names)) %>%
-    dplyr::arrange(name_fac) %>%
-    dplyr::select(-name_fac) %>%
-    dplyr::rename(group = name)
+    dplyr::mutate(grp_fac = factor(group, levels = grp_names)) %>%
+    dplyr::arrange(grp_fac) %>%
+    dplyr::select(-grp_fac)
 
   print(Sys.time() - run_time)
   message(Sys.time())
