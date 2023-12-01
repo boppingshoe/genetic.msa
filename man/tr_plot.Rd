@@ -25,14 +25,12 @@ Trace plot in ggplot
 Plot MCMC trace
 }
 \examples{
-# set up input data and run multistage model
-msgsi_dat <-
-  prep_msgsi_data(mixture_data = mix,
-  baseline1_data = base_templin, baseline2_data = base_yukon,
-  pop1_info = templin_pops211, pop2_info = yukon_pops50, sub_group = 3:5)
+# set up input data
+gsi_data <- prep_gsi_data(mixture_data = mix, baseline_data = baseline, pop_info = pops211)
 
-msgsi_out <- msgsi_mdl(msgsi_dat, nreps = 25, nburn = 15, thin = 1, nchains = 1)
+# run model
+gsi_out <- gsi_mdl(gsi_data, 10, 5, 1, 4)
 
 # trace plot
-tr_plot(obj = msgsi_out$trace_comb)
+tr_plot(obj = gsi_out$trace)
 }

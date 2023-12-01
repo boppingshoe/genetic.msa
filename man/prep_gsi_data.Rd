@@ -29,6 +29,6 @@ Prepping single baseline GSI input data
 }
 \examples{
 # prep input data
-gsi_data <- prep_gsi_data(mixture_data = mix, baseline_data = base, pop_info = pops211)
+gsi_data <- prep_gsi_data(mixture_data = mix, baseline_data = baseline, pop_info = pops211)
 
 }

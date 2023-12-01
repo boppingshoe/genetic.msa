@@ -24,7 +24,7 @@
 #'
 #' @examples
 #' # prep input data
-#' gsi_data <- prep_gsi_data(mixture_data = mix, baseline_data = base, pop_info = pops211)
+#' gsi_data <- prep_gsi_data(mixture_data = mix, baseline_data = baseline, pop_info = pops211)
 #'
 #' # run model
 #' gsi_out <- gsi_mdl(gsi_data, 10, 5, 1, 4)
