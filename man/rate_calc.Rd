@@ -20,7 +20,7 @@ An array with error/accuracy rates for plotting ROC.
 Calculate error and accuracy rates for plotting ROC
 }
 \examples{
-\donotrun{
+\dontrun{
 rates <- rate_calc(scaled_like, threshold = 0.5, unit = "Russia")
 }
 

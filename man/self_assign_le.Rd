@@ -18,7 +18,7 @@ An array of assignment probabilities for each reporting group as columns and ind
 Self-assignment using baseline data
 }
 \examples{
-\donotrun{
+\dontrun{
 scaled_like <- self_assign_le(base, pops211)
 }
 

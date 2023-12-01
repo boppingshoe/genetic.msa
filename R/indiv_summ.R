@@ -9,7 +9,7 @@
 #' @return An array with error/accuracy rates for plotting ROC.
 #'
 #' @examples
-#' \donotrun{
+#' \dontrun{
 #' rates <- rate_calc(scaled_like, threshold = 0.5, unit = "Russia")
 #' }
 #'
@@ -56,7 +56,7 @@ rate_calc <- function(scaled_like, threshold, unit) {
 #' @return An array of assignment probabilities for each reporting group as columns and individual fish in the baseline as rows. Each individual has a known identity.
 #'
 #' @examples
-#' \donotrun{
+#' \dontrun{
 #' scaled_like <- self_assign_le(base, pops211)
 #' }
 #'
