@@ -149,7 +149,7 @@ gsi_mdl <- function(dat_in, nreps, nburn, thin, nchains, nadapt = 0, keep_burn =
       }))
   } # only when both reporting groups and sample include hatcheries
 
-  # genotype freq prod f(x_m|q_k)h(a_m|pi_k)
+  # genotype freq prod f(x_m|q_k)
   # rows = indiv, cols = pops
   freq[na_i, wildpops] <- exp(x[na_i,] %*% log(t_q[, 1:K]))
 
