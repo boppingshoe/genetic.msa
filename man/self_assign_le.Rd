@@ -19,7 +19,7 @@ Self-assignment using baseline data
 }
 \examples{
 \dontrun{
-scaled_like <- self_assign_le(base, pops211)
+scaled_like <- self_assign_le(baseline, pops211)
 }
 
 }

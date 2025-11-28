@@ -2,7 +2,7 @@
 
 #' Calculate error and accuracy rates for plotting ROC
 #'
-#' @param like_dat Output from self_assign_le.
+#' @param scaled_like Output from self_assign_le.
 #' @param threshold Cut-off for accepting individual assignment.
 #' @param unit Which reporting unit to calculate.
 #'
@@ -57,7 +57,7 @@ rate_calc <- function(scaled_like, threshold, unit) {
 #'
 #' @examples
 #' \dontrun{
-#' scaled_like <- self_assign_le(base, pops211)
+#' scaled_like <- self_assign_le(baseline, pops211)
 #' }
 #'
 #' @export
@@ -176,7 +176,7 @@ self_assign_le <- function(base_dat, pop_info) {
 #'
 #' @examples
 #' # prep input data
-#' gsi_data <- prep_gsi_data(mixture_data = mix, baseline_data = base, pop_info = pops211)
+#' gsi_data <- prep_gsi_data(mixture_data = mix, baseline_data = baseline, pop_info = pops211)
 #'
 #' assign_like <- indiv_assign(gsi_data)
 #'
@@ -244,10 +244,10 @@ indiv_assign <- function(gsi_dat) {
 #'
 #' @examples
 #' # prep input data
-#' gsi_data <- prep_gsi_data(mixture_data = mix, baseline_data = base, pop_info = pops211)
+#' gsi_data <- prep_gsi_data(mixture_data = mix, baseline_data = baseline, pop_info = pops211)
 #'
 #' # run model
-#' gsi_out <- gsi_mdl(gsi_data, 10, 5, 1, 4)
+#' gsi_out <- gsi_mdl(gsi_data, 10, 5, 1, 1)
 #'
 #' # summarize individual assignments
 #' indiv_ass <- indiv_summ(gsi_out, gsi_data)

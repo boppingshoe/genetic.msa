@@ -17,7 +17,7 @@ Calculate individual assignment using likelihood
 }
 \examples{
 # prep input data
-gsi_data <- prep_gsi_data(mixture_data = mix, baseline_data = base, pop_info = pops211)
+gsi_data <- prep_gsi_data(mixture_data = mix, baseline_data = baseline, pop_info = pops211)
 
 assign_like <- indiv_assign(gsi_data)
 

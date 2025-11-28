@@ -7,11 +7,11 @@
 rate_calc(scaled_like, threshold, unit)
 }
 \arguments{
+\item{scaled_like}{Output from self_assign_le.}
+
 \item{threshold}{Cut-off for accepting individual assignment.}
 
 \item{unit}{Which reporting unit to calculate.}
-
-\item{like_dat}{Output from self_assign_le.}
 }
 \value{
 An array with error/accuracy rates for plotting ROC.

@@ -28,7 +28,7 @@
 #' gsi_data <- prep_gsi_data(mixture_data = mix, baseline_data = baseline, pop_info = pops211)
 #'
 #' # run model
-#' gsi_out <- gsi_mdl(gsi_data, 10, 5, 1, 4)
+#' gsi_out <- gsi_mdl(gsi_data, 10, 5, 1, 1)
 #'
 #' @export
 gsi_mdl <- function(dat_in, nreps, nburn, thin, nchains, nadapt = 0, keep_burn = FALSE, cond_gsi = TRUE, harvest = NULL, file = NULL, seed = NULL) {
@@ -253,7 +253,7 @@ gsi_mdl <- function(dat_in, nreps, nburn, thin, nchains, nadapt = 0, keep_burn =
   summ_pop <-
     lapply(p_combo, function(rlist) rlist[keep_list,]) %>%
     dplyr::bind_rows() %>%
-    tidyr::pivot_longer(cols = tidyr::everything()) %>%
+    tidyr::pivot_longer(cols = tidyr::everything(), names_to = "group") %>%
     dplyr::summarise(
       mean = mean(value),
       median = stats::median(value),
@@ -262,7 +262,7 @@ gsi_mdl <- function(dat_in, nreps, nburn, thin, nchains, nadapt = 0, keep_burn =
       ci.95 = stats::quantile(value, 0.95),
       p0 = {if (is.null(harvest)) mean(value < 5e-7)
         else mean(value < (0.5/ max(1, harvest * mean)))},
-      .by = name
+      .by = group
     ) %>%
     dplyr::mutate(
       GR = {if (nchains > 1) {
@@ -279,7 +279,7 @@ gsi_mdl <- function(dat_in, nreps, nburn, thin, nchains, nadapt = 0, keep_burn =
       } else {NA}},
       n_eff = coda::effectiveSize(mc_pop)
     ) %>%
-    dplyr::mutate(grp_fac = factor(name, levels = grp_names)) %>%
+    dplyr::mutate(grp_fac = factor(group, levels = grp_names)) %>%
     dplyr::arrange(grp_fac) %>%
     dplyr::select(-grp_fac)
 
@@ -380,7 +380,7 @@ my.gelman.diag <- function(x, confidence = 0.95, multivariate = TRUE) {
 }
 
 
-utils::globalVariables(c(".", "ch", "chain", "itr", "name", "name_fac", "value"))
+utils::globalVariables(c(".", "ch", "chain", "itr", "name_fac", "value"))
 
 
 
