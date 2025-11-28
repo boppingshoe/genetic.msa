@@ -13,6 +13,7 @@ gsi_mdl(
   nadapt = 0,
   keep_burn = FALSE,
   cond_gsi = TRUE,
+  harvest = NULL,
   file = NULL,
   seed = NULL
 )
@@ -34,6 +35,8 @@ running model in fully Bayesian mode.}
 \item{keep_burn}{Logical (default = FALSE). To save the burn-ins or not.}
 
 \item{cond_gsi}{Logical (default = TRUE). To run the model in conditional GSI mode.}
+
+\item{harvest}{An optional harvest number for calculating the probability of p = 0. A proportion is considered as 0 if it's less than 5e-7 by default. If harvest number is provided, p = 0 is calculated as 0.5 / harvest of that stock.}
 
 \item{file}{File path to save the output in RDS file. Need to type out the full path and extension \code{.Rds}. Default = NULL for not saving the output.}
 

@@ -10,6 +10,7 @@
 #'   running model in fully Bayesian mode.
 #' @param keep_burn Logical (default = FALSE). To save the burn-ins or not.
 #' @param cond_gsi Logical (default = TRUE). To run the model in conditional GSI mode.
+#' @param harvest An optional harvest number for calculating the probability of p = 0. A proportion is considered as 0 if it's less than 5e-7 by default. If harvest number is provided, p = 0 is calculated as 0.5 / harvest of that stock.
 #' @param file File path to save the output in RDS file. Need to type out the full path and extension `.Rds`. Default = NULL for not saving the output.
 #' @param seed Random seed for reproducibility. Default = NULL (no random seed).
 #'
@@ -30,7 +31,7 @@
 #' gsi_out <- gsi_mdl(gsi_data, 10, 5, 1, 4)
 #'
 #' @export
-gsi_mdl <- function(dat_in, nreps, nburn, thin, nchains, nadapt = 0, keep_burn = FALSE, cond_gsi = TRUE, file = NULL, seed = NULL) {
+gsi_mdl <- function(dat_in, nreps, nburn, thin, nchains, nadapt = 0, keep_burn = FALSE, cond_gsi = TRUE, harvest = NULL, file = NULL, seed = NULL) {
 
   ### ballroom categories ### ----
   categories <- c("Live, Werk, Pose", "Bring It Like Royalty", "Face", "Best Mother", "Best Dressed", "High Class In A Fur Coat", "Snow Ball", "Butch Queen Body", "Weather Girl", "Labels", "Mother-Daughter Realness", "Working Girl", "Linen Vs. Silk", "Perfect Tens", "Modele Effet", "Stone Cold Face", "Realness", "Intergalatic Best Dressed", "House Vs. House", "Femme Queen Vogue", "High Fashion In Feathers", "Femme Queen Runway", "Lofting", "Higher Than Heaven", "Once Upon A Time")
@@ -239,8 +240,7 @@ gsi_mdl <- function(dat_in, nreps, nburn, thin, nchains, nadapt = 0, keep_burn =
                             (nreps- nburn * isFALSE(keep_burn)) / thin)
              ) %>%
              dplyr::rename(itr = 1, popn = 2) %>%
-             dplyr::group_by(itr, grpvec) %>%
-             dplyr::summarise(p = sum(value), .groups = "drop") %>%
+             dplyr::summarise(p = sum(value), .by = c(itr, grpvec)) %>%
              tidyr::pivot_wider(names_from = grpvec, values_from = p) %>%
              dplyr::select(-itr))
 
@@ -253,15 +253,16 @@ gsi_mdl <- function(dat_in, nreps, nburn, thin, nchains, nadapt = 0, keep_burn =
   summ_pop <-
     lapply(p_combo, function(rlist) rlist[keep_list,]) %>%
     dplyr::bind_rows() %>%
-    tidyr::pivot_longer(cols = 1:ncol(.), names_to = "group") %>%
-    dplyr::group_by(group) %>%
+    tidyr::pivot_longer(cols = tidyr::everything()) %>%
     dplyr::summarise(
       mean = mean(value),
       median = stats::median(value),
       sd = stats::sd(value),
       ci.05 = stats::quantile(value, 0.05),
       ci.95 = stats::quantile(value, 0.95),
-      .groups = "drop"
+      p0 = {if (is.null(harvest)) mean(value < 5e-7)
+        else mean(value < (0.5/ max(1, harvest * mean)))},
+      .by = name
     ) %>%
     dplyr::mutate(
       GR = {if (nchains > 1) {
@@ -278,7 +279,7 @@ gsi_mdl <- function(dat_in, nreps, nburn, thin, nchains, nadapt = 0, keep_burn =
       } else {NA}},
       n_eff = coda::effectiveSize(mc_pop)
     ) %>%
-    dplyr::mutate(grp_fac = factor(group, levels = grp_names)) %>%
+    dplyr::mutate(grp_fac = factor(name, levels = grp_names)) %>%
     dplyr::arrange(grp_fac) %>%
     dplyr::select(-grp_fac)
 
