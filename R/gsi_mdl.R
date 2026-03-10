@@ -10,7 +10,7 @@
 #'   running model in fully Bayesian mode.
 #' @param keep_burn Logical (default = FALSE). To save the burn-ins or not.
 #' @param cond_gsi Logical (default = TRUE). To run the model in conditional GSI mode.
-#' @param harvest An optional harvest number for calculating the probability of p = 0. A proportion is considered as 0 if it's less than 5e-7 by default. If harvest number is provided, p = 0 is calculated as 0.5 / harvest of that stock.
+#' @param harvest An optional harvest number (or a vector of numbers drawn from the distribution of total harvest) for calculating the probability of p = 0 and estimating uncertainty of stock-specific harvest. A proportion is considered 0 if less than 5e-7 by default. If a total harvest number is provided, p = 0 is calculated as 0.5 / stock-specific harvest. If a vector of numbers are provided, the mean will be used for the calculation.
 #' @param file File path to save the output in RDS file. Need to type out the full path and extension `.Rds`. Default = NULL for not saving the output.
 #' @param seed Random seed for reproducibility. Default = NULL (no random seed).
 #'
@@ -18,6 +18,7 @@
 #'  - Summary of the estimates
 #'  - Trace of posterior samples
 #'  - Individual assignment history
+#'  - Trace of stock-specific total catch
 #'
 #' @importFrom magrittr %>%
 #' @importFrom doRNG %dorng%
@@ -31,14 +32,14 @@
 #' gsi_out <- gsi_mdl(gsi_data, 10, 5, 1, 1)
 #'
 #' @export
-gsi_mdl <- function(dat_in, nreps, nburn, thin, nchains, nadapt = 0, keep_burn = FALSE, cond_gsi = TRUE, harvest = NULL, file = NULL, seed = NULL) {
+gsi_mdl <- function(dat_in, nreps, nburn, thin, nchains, nadapt = 0, keep_burn = FALSE, cond_gsi = TRUE, harvest = 0, file = NULL, seed = NULL) {
 
   ### ballroom categories ### ----
   categories <- c("Live, Werk, Pose", "Bring It Like Royalty", "Face", "Best Mother", "Best Dressed", "High Class In A Fur Coat", "Snow Ball", "Butch Queen Body", "Weather Girl", "Labels", "Mother-Daughter Realness", "Working Girl", "Linen Vs. Silk", "Perfect Tens", "Modele Effet", "Stone Cold Face", "Realness", "Intergalatic Best Dressed", "House Vs. House", "Femme Queen Vogue", "High Fashion In Feathers", "Femme Queen Runway", "Lofting", "Higher Than Heaven", "Once Upon A Time")
 
   encouragements <- c("I'm proud of ", "keep your ", "be a ", "find strength in ", "worry will never change ", "work for a cause, not for ", "gradtitude turns what we have into ", "good things come to ", "your attitude determines your ", "the only limits in life are ", "find joy in ", "surround yourself with only ", "if oppotunity doesn't knock, build ")
 
-  ### data input ### ----
+  ### data input ----
   x <- dat_in$x %>%
     dplyr::select(ends_with(as.character(0:9))) %>%
     dplyr::select(order(colnames(.))) %>%
@@ -84,7 +85,7 @@ gsi_mdl <- function(dat_in, nreps, nburn, thin, nchains, nadapt = 0, keep_burn =
 
   # alleles <- states[seq.int(sum(nalleles))] # allele types
 
-  ### specifications ### ----
+  ### specifications ----
   rdirich <- function(alpha0) {
     if (sum(alpha0)) {
       vec = stats::rgamma(length(alpha0), alpha0, 1)
@@ -96,6 +97,10 @@ gsi_mdl <- function(dat_in, nreps, nburn, thin, nchains, nadapt = 0, keep_burn =
       rep(0, length(alpha0))
     }
   } # og random dirichlet by jj
+
+  resample <- function(x, ...) {
+    x[sample.int(length(x), ...)]
+  } # able to sample from single element
 
   message(paste0("Running model... and ", sample(encouragements, 1), sample(categories, 1), "!"))
 
@@ -109,7 +114,7 @@ gsi_mdl <- function(dat_in, nreps, nburn, thin, nchains, nadapt = 0, keep_burn =
   doParallel::registerDoParallel(cl, cores = nchains)
   if (!is.null(seed)) doRNG::registerDoRNG(seed, once = TRUE)
 
-  ### initial values ### ----
+  ### initial values ----
   # hyper-param for relative freq q (allele) and pi (age class)
   beta <- # actually beta and gamma
     matrix(0,
@@ -163,13 +168,12 @@ gsi_mdl <- function(dat_in, nreps, nburn, thin, nchains, nadapt = 0, keep_burn =
 
   p <- rdirich(table(iden) + pPrior)
 
-  ### parallel chains ### ----
+  ### parallel chains ----
   out_list <- foreach::foreach(
     ch = chains, .packages = c("magrittr", "tidyr", "dplyr")
     ) %dorng% {
 
-    # p_out <- array(NA, c((nreps-n_burn)/thin, K+H+2))
-    p_out <- iden_out <- list()
+      p_out <- iden_out <- sstc_out <- list()
 
     ## gibbs loop ##
     for (rep in seq(nreps + nadapt)) {
@@ -196,27 +200,34 @@ gsi_mdl <- function(dat_in, nreps, nburn, thin, nchains, nadapt = 0, keep_burn =
         sample(K, 1, FALSE, (p * freq[m, ])[seq.int(K)])
       }))
 
+      ### stock-specific harvest estimate ----
+      n_harv <- resample(harvest, 1)
+      iden_harv <-
+        sample(K + H, max(0, n_harv - nrow(x)), replace = TRUE, prob = p) %>%
+        factor(levels = seq(K + H))
+      sstc <- table(c(iden, iden_harv)) # stock-specific total catch
+
       p <- rdirich(table(iden) + pPrior)
 
-      # record output based on keep or not keep burn-ins
+      ### record output ----
+      # based on keep or not keep burn-ins
       if (rep > nadapt) { # after adaptation stage
         if ((rep-nadapt) > n_burn & (rep - nadapt - n_burn) %% thin == 0) {
 
           it <- (rep - nadapt - n_burn) / thin
-          # p_out[it, ] <- c(p, it, ch)
           p_out[[it]] <- c(p, it, ch)
 
           iden_out[[it]] <- iden
+
+          sstc_out[[it]] <- sstc
 
         } # if rep > nburn & (rep-nburn) %% thin == 0
       } # if rep > nadapt
 
     } # end gibbs loop
 
-    out_items <- list(p_out, iden_out)
+    out_items <- list(p_out, iden_out, sstc_out)
 
-    # as_tibble(p_out)
-    # sapply(p_out, rbind) %>% t() %>% as_tibble()
     lapply(out_items, function(oi) {
       sapply(oi, rbind) %>%
         t() %>%
@@ -227,7 +238,7 @@ gsi_mdl <- function(dat_in, nreps, nburn, thin, nchains, nadapt = 0, keep_burn =
 
   parallel::stopCluster(cl)
 
-  ### summary ### ----
+  ### summary ----
 
   out_list1 <- lapply(out_list, function(ol) ol[[1]])
 
@@ -260,8 +271,8 @@ gsi_mdl <- function(dat_in, nreps, nburn, thin, nchains, nadapt = 0, keep_burn =
       sd = stats::sd(value),
       ci.05 = stats::quantile(value, 0.05),
       ci.95 = stats::quantile(value, 0.95),
-      p0 = {if (is.null(harvest)) mean(value < 5e-7)
-        else mean(value < (0.5/ max(1, harvest * mean)))},
+      p0 = {if (mean(harvest) == 0) mean(value < 5e-7)
+        else mean(value < (0.5/ max(1, mean(harvest) * mean)))},
       .by = group
     ) %>%
     dplyr::mutate(
@@ -301,6 +312,10 @@ gsi_mdl <- function(dat_in, nreps, nburn, thin, nchains, nadapt = 0, keep_burn =
 
   out$idens <-
     lapply(out_list, function(ol) ol[[2]]) %>%
+    dplyr::bind_rows()
+
+  out$sstc_trace <-
+    lapply(out_list, function(ol) ol[[3]]) %>%
     dplyr::bind_rows()
 
   if(!is.null(file)) saveRDS(out, file = file)

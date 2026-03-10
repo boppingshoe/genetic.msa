@@ -13,7 +13,7 @@ gsi_mdl(
   nadapt = 0,
   keep_burn = FALSE,
   cond_gsi = TRUE,
-  harvest = NULL,
+  harvest = 0,
   file = NULL,
   seed = NULL
 )
@@ -36,7 +36,7 @@ running model in fully Bayesian mode.}
 
 \item{cond_gsi}{Logical (default = TRUE). To run the model in conditional GSI mode.}
 
-\item{harvest}{An optional harvest number for calculating the probability of p = 0. A proportion is considered as 0 if it's less than 5e-7 by default. If harvest number is provided, p = 0 is calculated as 0.5 / harvest of that stock.}
+\item{harvest}{An optional harvest number (or a vector of numbers drawn from the distribution of total harvest) for calculating the probability of p = 0 and estimating uncertainty of stock-specific harvest. A proportion is considered 0 if less than 5e-7 by default. If a total harvest number is provided, p = 0 is calculated as 0.5 / stock-specific harvest. If a vector of numbers are provided, the mean will be used for the calculation.}
 
 \item{file}{File path to save the output in RDS file. Need to type out the full path and extension \code{.Rds}. Default = NULL for not saving the output.}
 
@@ -48,6 +48,7 @@ A list containing:
 \item Summary of the estimates
 \item Trace of posterior samples
 \item Individual assignment history
+\item Trace of stock-specific total catch
 }
 }
 \description{
