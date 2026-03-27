@@ -2,7 +2,7 @@
 % Please edit documentation in R/harv_summ.R
 \name{harv_summ}
 \alias{harv_summ}
-\title{Summarize trace output for stock-specific harvest}
+\title{Summarizing trace output for stock-specific harvest in reporting groups}
 \usage{
 harv_summ(mdl_out, mdl_dat)
 }
@@ -15,7 +15,7 @@ harv_summ(mdl_out, mdl_dat)
 A tibble of harvest estimates for each reporting group as columns and MCMC iterations as rows.
 }
 \description{
-Summarize trace output for stock-specific harvest
+Summarizing trace output for stock-specific harvest in reporting groups
 }
 \examples{
 # prep input data
@@ -26,6 +26,6 @@ tot_harv <- harv_func(c(500, 0.05))
 gsi_out <- gsi_mdl(gsi_data, 10, 5, 1, 1, harvest = tot_harv)
 
 # summarize individual assignments
-harv_trace <- harv_summ(gsi_out, gsi_data)
+harv_summary <- harv_summ(gsi_out, gsi_data)
 
 }

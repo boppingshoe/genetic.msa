@@ -6,6 +6,8 @@
 #' @param pop_info Population information for the baseline. A tibble with columns
 #'   collection (collection names), repunit (reporting unit names),
 #'   grpvec (group numbers), origin (wild/hatchery).
+#' @param harvest_mean An optional harvest number entered as a point estimate or as the mean harvest for generating a distribution of harvest if CV is provided (as harvest_cv). The harvest information is used during the model run for 1) calculating the probability of p = 0 and 2) estimating uncertainty of the stock-specific harvest. A proportion estimate is considered 0 if it is less than 5e-7 by default. If harvest information is provided, a proportion estimate is considered 0 if it is less than 0.5 / stock-specific harvest. If harvest information is provided as a distribution, the mean will be used for the calculation.
+#' @param harvest_cv (Optional) estimated coefficient of variation of harvest.
 #' @param file Where you want to save a copy of input data as a RDS file.
 #'   Need to type out full path and extension `.Rds`.
 #'   Leave it empty if you don't want to save a copy.
@@ -17,11 +19,12 @@
 #'
 #' @examples
 #' # prep input data
-#' gsi_data <- prep_gsi_data(mixture_data = mix, baseline_data = baseline, pop_info = pops211)
+#' gsi_data <- prep_gsi_data(mixture_data = mix, baseline_data = baseline, pop_info = pops211, harvest_mean = 500, harvest_cv = 0.05)
 #'
 #' @export
 prep_gsi_data <-
-  function(mixture_data, baseline_data, pop_info, file = NULL, loci = NULL) {
+  function(mixture_data, baseline_data, pop_info, harvest_mean = 0, harvest_cv = 0,
+ file = NULL, loci = NULL) {
 
     start_time <- Sys.time()
 
@@ -115,16 +118,23 @@ prep_gsi_data <-
       iden <- NULL
     }
 
+    if (harvest_cv == 0) {
+      harvest <- harvest_mean
+    } else {
+      harvest <- harv_func(c(harvest_mean, harvest_cv))
+    }
+
     # output
     gsi_dat = list(
       x = mix,
       y = base,
       iden = iden,
       nalleles = n_alleles,
-      groups = base$grpvec,
+      groups = dplyr::select(base, collection, repunit, grpvec),
       group_names = grp_nms,
       wildpops = wildpops,
-      hatcheries = hatcheries
+      hatcheries = hatcheries,
+      harvest = harvest
     )
 
     if (!is.null(file)) saveRDS(gsi_dat, file = file)

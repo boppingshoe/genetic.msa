@@ -4,7 +4,15 @@
 \alias{prep_gsi_data}
 \title{Prepping single baseline GSI input data}
 \usage{
-prep_gsi_data(mixture_data, baseline_data, pop_info, file = NULL, loci = NULL)
+prep_gsi_data(
+  mixture_data,
+  baseline_data,
+  pop_info,
+  harvest_mean = 0,
+  harvest_cv = 0,
+  file = NULL,
+  loci = NULL
+)
 }
 \arguments{
 \item{mixture_data}{Mixture data in GCL or \emph{rubias} format.}
@@ -14,6 +22,10 @@ prep_gsi_data(mixture_data, baseline_data, pop_info, file = NULL, loci = NULL)
 \item{pop_info}{Population information for the baseline. A tibble with columns
 collection (collection names), repunit (reporting unit names),
 grpvec (group numbers), origin (wild/hatchery).}
+
+\item{harvest_mean}{An optional harvest number entered as a point estimate or as the mean harvest for generating a distribution of harvest if CV is provided (as harvest_cv). The harvest information is used during the model run for 1) calculating the probability of p = 0 and 2) estimating uncertainty of the stock-specific harvest. A proportion estimate is considered 0 if it is less than 5e-7 by default. If harvest information is provided, a proportion estimate is considered 0 if it is less than 0.5 / stock-specific harvest. If harvest information is provided as a distribution, the mean will be used for the calculation.}
+
+\item{harvest_cv}{(Optional) estimated coefficient of variation of harvest.}
 
 \item{file}{Where you want to save a copy of input data as a RDS file.
 Need to type out full path and extension \code{.Rds}.
@@ -29,6 +41,6 @@ Prepping single baseline GSI input data
 }
 \examples{
 # prep input data
-gsi_data <- prep_gsi_data(mixture_data = mix, baseline_data = baseline, pop_info = pops211)
+gsi_data <- prep_gsi_data(mixture_data = mix, baseline_data = baseline, pop_info = pops211, harvest_mean = 500, harvest_cv = 0.05)
 
 }

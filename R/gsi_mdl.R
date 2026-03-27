@@ -26,7 +26,7 @@
 #'
 #' @examples
 #' # prep input data
-#' gsi_data <- prep_gsi_data(mixture_data = mix, baseline_data = baseline, pop_info = pops211)
+#' gsi_data <- prep_gsi_data(mixture_data = mix, baseline_data = baseline, pop_info = pops211, harvest_mean = 500, harvest_cv = 0.05)
 #'
 #' # run model
 #' gsi_out <- gsi_mdl(gsi_data, 10, 5, 1, 1)
@@ -54,7 +54,7 @@ gsi_mdl <- function(dat_in, nreps, nburn, thin, nchains, nadapt = 0, keep_burn =
   } else iden <- dat_in$iden # iden info
 
   nalleles <- dat_in$nalleles # number of allele types
-  grps <- dat_in$groups # vector id for reporting groups (aka groupvec)
+  grps <- dat_in$groups$grpvec # vector id for reporting groups (aka groupvec)
   grp_names <- dat_in$group_names # reporting groups
 
   wildpops <- dat_in$wildpops
@@ -81,9 +81,8 @@ gsi_mdl <- function(dat_in, nreps, nburn, thin, nchains, nadapt = 0, keep_burn =
   iden <- factor(iden, levels = seq(K + H))
 
   trait_fac <- factor(rep(names(nalleles), nalleles), levels = names(nalleles))
-  states <- paste0(paste0(trait_fac, "_"), unlist(lapply(nalleles, seq.int)))
 
-  # alleles <- states[seq.int(sum(nalleles))] # allele types
+  harvest <- dat_in$harvest
 
   ### specifications ----
   rdirich <- function(alpha0) {
@@ -214,12 +213,15 @@ gsi_mdl <- function(dat_in, nreps, nburn, thin, nchains, nadapt = 0, keep_burn =
       if (rep > nadapt) { # after adaptation stage
         if ((rep-nadapt) > n_burn & (rep - nadapt - n_burn) %% thin == 0) {
 
-          it <- (rep - nadapt - n_burn) / thin
-          p_out[[it]] <- c(p, it, ch)
+          it <- rep - nadapt
+          p_out[[it]] <-
+            stats::setNames(c(p, it, ch), c(dat_in$y$collection, "itr", "ch"))
 
-          iden_out[[it]] <- iden
+          iden_out[[it]] <-
+            stats::setNames(c(iden, it, ch), c(dat_in$x$indiv, "itr", "ch"))
 
-          sstc_out[[it]] <- sstc
+          sstc_out[[it]] <-
+            stats::setNames(c(sstc, it, ch), c(dat_in$y$collection, "itr", "ch"))
 
         } # if rep > nburn & (rep-nburn) %% thin == 0
       } # if rep > nadapt
@@ -229,9 +231,7 @@ gsi_mdl <- function(dat_in, nreps, nburn, thin, nchains, nadapt = 0, keep_burn =
     out_items <- list(p_out, iden_out, sstc_out)
 
     lapply(out_items, function(oi) {
-      sapply(oi, rbind) %>%
-        t() %>%
-        dplyr::as_tibble()
+      dplyr::bind_rows(oi)
     })
 
   } # end parallel chains
@@ -243,23 +243,28 @@ gsi_mdl <- function(dat_in, nreps, nburn, thin, nchains, nadapt = 0, keep_burn =
   out_list1 <- lapply(out_list, function(ol) ol[[1]])
 
   p_combo <-
-    lapply(out_list1,
-           function(ol) ol %>%
-             tidyr::pivot_longer(cols = 1:(ncol(.) - 2)) %>%
-             dplyr::mutate(
-               grpvec = rep(grp_names[grps],
-                            (nreps- nburn * isFALSE(keep_burn)) / thin)
-             ) %>%
-             dplyr::rename(itr = 1, popn = 2) %>%
-             dplyr::summarise(p = sum(value), .by = c(itr, grpvec)) %>%
-             tidyr::pivot_wider(names_from = grpvec, values_from = p) %>%
-             dplyr::select(-itr))
+    lapply(out_list1, function(ol) {
+      ol %>%
+        dplyr::select(-c(itr, ch)) %>%
+        t() %>% rowsum(., dat_in$y$repunit) %>% t() %>% as.data.frame()
+    })
 
   keep_list <- ((nburn * keep_burn + 1):(nreps - nburn * isFALSE(keep_burn)))[!((nburn * keep_burn + 1):(nreps - nburn * isFALSE(keep_burn))) %% thin] / thin
 
   mc_pop <- coda::as.mcmc.list(
     lapply(p_combo,
            function(rlist) coda::mcmc(rlist[keep_list,])) )
+
+  idens <-
+    lapply(out_list, function(ol) ol[[2]]) %>%
+    dplyr::bind_rows()
+
+  iden_tbl <- idens %>%
+    dplyr::filter(itr > nburn) %>%
+    dplyr::select(-c(itr, ch)) %>%
+    apply(., 1, function(ids) table(factor(ids, levels = seq(K + H)))) %>%
+    rowsum(., dat_in$groups$repunit) %>%
+    t()
 
   summ_pop <-
     lapply(p_combo, function(rlist) rlist[keep_list,]) %>%
@@ -275,6 +280,10 @@ gsi_mdl <- function(dat_in, nreps, nburn, thin, nchains, nadapt = 0, keep_burn =
         else mean(value < (0.5/ max(1, mean(harvest) * mean)))},
       .by = group
     ) %>%
+    dplyr::left_join({
+      apply(iden_tbl, 2, function(ct) mean(ct == 0)) %>%
+        tibble::enframe(name = "group", value = 'z0')
+    }, by = "group") %>%
     dplyr::mutate(
       GR = {if (nchains > 1) {
         coda::gelman.diag(mc_pop,
@@ -310,13 +319,13 @@ gsi_mdl <- function(dat_in, nreps, nburn, thin, nchains, nadapt = 0, keep_burn =
                   each = (nreps - nburn * isFALSE(keep_burn)) / thin)
       )
 
-  out$idens <-
-    lapply(out_list, function(ol) ol[[2]]) %>%
-    dplyr::bind_rows()
+  out$idens <- idens
 
   out$sstc_trace <-
     lapply(out_list, function(ol) ol[[3]]) %>%
     dplyr::bind_rows()
+
+  out$specs <- stats::setNames(c(nreps, nburn, thin, nchains, keep_burn, ifelse(is.null(seed), "NULL", seed)), c("nreps", "nburn", "thin", "nchains", "keep_burn", "seed"))
 
   if(!is.null(file)) saveRDS(out, file = file)
 

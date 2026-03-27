@@ -19,7 +19,7 @@ harv_func <- function(x, n = 5000, seed = NULL) {
 }
 
 
-#' Summarize trace output for stock-specific harvest
+#' Summarizing trace output for stock-specific harvest in reporting groups
 #'
 #' @param mdl_out Output of GSI model run
 #' @param mdl_dat Input data for GSI model
@@ -35,13 +35,31 @@ harv_func <- function(x, n = 5000, seed = NULL) {
 #' gsi_out <- gsi_mdl(gsi_data, 10, 5, 1, 1, harvest = tot_harv)
 #'
 #' # summarize individual assignments
-#' harv_trace <- harv_summ(gsi_out, gsi_data)
+#' harv_summary <- harv_summ(gsi_out, gsi_data)
 #'
 #' @export
 harv_summ <- function(mdl_out, mdl_dat) {
-  rowsum(t(mdl_out$sstc_trace), mdl_dat$group_names[mdl_dat$groups]) %>%
-    t() %>%
-    tibble::as_tibble()
+  # rowsum(t(mdl_out$sstc_trace), mdl_dat$group_names[mdl_dat$groups]) %>%
+  #   t() %>%
+  #   tibble::as_tibble()
+
+  nburn <- as.numeric(mdl_out$specs["nburn"])
+
+  harv <-
+    mdl_out$sstc_trace %>%
+    dplyr::filter(itr > nburn) %>%
+    tidyr::pivot_longer(-c(itr, ch), names_to = "collection", values_to = "sstc_coll") %>%
+    dplyr::left_join(mdl_dat$groups, by = "collection") %>%
+    dplyr::summarise(sstc = sum(sstc_coll), .by = c(itr, ch, repunit))
+
+  harv %>%
+    dplyr::summarise(mean_harv = mean(sstc),
+                     median_harv = stats::median(sstc),
+                     sd_harv = stats::sd(sstc),
+                     ci05_harv = stats::quantile(sstc, 0.05),
+                     ci95_harv = stats::quantile(sstc, 0.95),
+                     .by = repunit)
+
 }
 
 

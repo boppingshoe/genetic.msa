@@ -255,7 +255,13 @@ indiv_assign <- function(gsi_dat) {
 #' @export
 indiv_summ <- function(mdl_out, mdl_dat) {
 
-  pi <- apply(mdl_out$idens, 2,
+  nburn <- as.numeric(mdl_out$specs["nburn"])
+
+  idens <- mdl_out$idens %>%
+    dplyr::filter(itr > nburn) %>%
+    dplyr::select(-c(itr, ch))
+
+  pi <- apply(idens, 2,
               function (idens) {
                 factor(idens, levels = seq(length(mdl_dat$groups))) %>%
                   table(.) %>%

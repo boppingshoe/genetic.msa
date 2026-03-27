@@ -4,7 +4,7 @@
 \alias{harv_func}
 \title{Sample total harvest numbers from a lognormal distribution}
 \usage{
-harv_func(x, n = 5000, seed = NULL, ...)
+harv_func(x, n = 5000, seed = NULL)
 }
 \arguments{
 \item{x}{A vector consists of harvest mean and CV.}

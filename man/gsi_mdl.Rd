@@ -56,7 +56,7 @@ Run single baseline GSI model
 }
 \examples{
 # prep input data
-gsi_data <- prep_gsi_data(mixture_data = mix, baseline_data = baseline, pop_info = pops211)
+gsi_data <- prep_gsi_data(mixture_data = mix, baseline_data = baseline, pop_info = pops211, harvest_mean = 500, harvest_cv = 0.05)
 
 # run model
 gsi_out <- gsi_mdl(gsi_data, 10, 5, 1, 1)
