@@ -19,6 +19,8 @@
 #'  - Trace of posterior samples
 #'  - Individual assignment history
 #'  - Trace of stock-specific total catch
+#'  - A tibble of collections and reporting groups
+#'  - Model run specifications
 #'
 #' @importFrom magrittr %>%
 #' @importFrom doRNG %dorng%
@@ -310,20 +312,26 @@ gsi_mdl <- function(dat_in, nreps, nburn, thin, nchains, nadapt = 0, keep_burn =
 
   out$summ <- summ_pop
 
-  out$trace <- p_combo %>%
-    dplyr::bind_rows() %>%
-    dplyr::mutate(
-      itr = rep(1:((nreps - nburn * isFALSE(keep_burn)) / thin),
-                times = nchains),
-      chain = rep(1:nchains,
-                  each = (nreps - nburn * isFALSE(keep_burn)) / thin)
-      )
+  # out$trace <- p_combo %>%
+  #   dplyr::bind_rows() %>%
+  #   dplyr::mutate(
+  #     itr = rep(1:((nreps - nburn * isFALSE(keep_burn)) / thin),
+  #               times = nchains),
+  #     chain = rep(1:nchains,
+  #                 each = (nreps - nburn * isFALSE(keep_burn)) / thin)
+  #     )
+
+  out$trace <-
+    out_list1 %>%
+    dplyr::bind_rows()
 
   out$idens <- idens
 
   out$sstc_trace <-
     lapply(out_list, function(ol) ol[[3]]) %>%
     dplyr::bind_rows()
+
+  out$groups <- dat_in$groups
 
   out$specs <- stats::setNames(c(nreps, nburn, thin, nchains, keep_burn, ifelse(is.null(seed), "NULL", seed)), c("nreps", "nburn", "thin", "nchains", "keep_burn", "seed"))
 

@@ -49,6 +49,8 @@ A list containing:
 \item Trace of posterior samples
 \item Individual assignment history
 \item Trace of stock-specific total catch
+\item A tibble of collections and reporting groups
+\item Model run specifications
 }
 }
 \description{
