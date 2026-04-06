@@ -49,7 +49,8 @@ harv_summ <- function(mdl_out, mdl_dat) {
     dplyr::filter(itr > nburn) %>%
     tidyr::pivot_longer(-c(itr, ch), names_to = "collection", values_to = "sstc_coll") %>%
     dplyr::left_join(mdl_dat$groups, by = "collection") %>%
-    dplyr::summarise(sstc = sum(sstc_coll), .by = c(itr, ch, repunit))
+    dplyr::summarise(sstc = sum(sstc_coll), .by = c(itr, ch, repunit)) %>%
+    dplyr::mutate(p = sstc / sum(sstc), .by = c(itr, ch))
 
   harv %>%
     dplyr::summarise(mean_harv = mean(sstc),
@@ -57,6 +58,11 @@ harv_summ <- function(mdl_out, mdl_dat) {
                      sd_harv = stats::sd(sstc),
                      ci05_harv = stats::quantile(sstc, 0.05),
                      ci95_harv = stats::quantile(sstc, 0.95),
+                     mean_p = mean(p),
+                     median_p = stats::median(p),
+                     sd_p = stats::sd(p),
+                     ci05_p = stats::quantile(p, 0.05),
+                     ci95_p = stats::quantile(p, 0.95),
                      .by = repunit)
 
 }
