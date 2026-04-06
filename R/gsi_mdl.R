@@ -10,7 +10,6 @@
 #'   running model in fully Bayesian mode.
 #' @param keep_burn Logical (default = FALSE). To save the burn-ins or not.
 #' @param cond_gsi Logical (default = TRUE). To run the model in conditional GSI mode.
-#' @param harvest An optional harvest number (or a vector of numbers drawn from the distribution of total harvest) for calculating the probability of p = 0 and estimating uncertainty of stock-specific harvest. A proportion is considered 0 if less than 5e-7 by default. If a total harvest number is provided, p = 0 is calculated as 0.5 / stock-specific harvest. If a vector of numbers are provided, the mean will be used for the calculation.
 #' @param file File path to save the output in RDS file. Need to type out the full path and extension `.Rds`. Default = NULL for not saving the output.
 #' @param seed Random seed for reproducibility. Default = NULL (no random seed).
 #'
@@ -34,7 +33,7 @@
 #' gsi_out <- gsi_mdl(gsi_data, 10, 5, 1, 1)
 #'
 #' @export
-gsi_mdl <- function(dat_in, nreps, nburn, thin, nchains, nadapt = 0, keep_burn = FALSE, cond_gsi = TRUE, harvest = 0, file = NULL, seed = NULL) {
+gsi_mdl <- function(dat_in, nreps, nburn, thin, nchains, nadapt = 0, keep_burn = FALSE, cond_gsi = TRUE, file = NULL, seed = NULL) {
 
   ### ballroom categories ### ----
   categories <- c("Live, Werk, Pose", "Bring It Like Royalty", "Face", "Best Mother", "Best Dressed", "High Class In A Fur Coat", "Snow Ball", "Butch Queen Body", "Weather Girl", "Labels", "Mother-Daughter Realness", "Working Girl", "Linen Vs. Silk", "Perfect Tens", "Modele Effet", "Stone Cold Face", "Realness", "Intergalatic Best Dressed", "House Vs. House", "Femme Queen Vogue", "High Fashion In Feathers", "Femme Queen Runway", "Lofting", "Higher Than Heaven", "Once Upon A Time")
