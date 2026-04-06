@@ -47,7 +47,7 @@ gsi_mdl <- function(dat_in, nreps, nburn, thin, nchains, nadapt = 0, keep_burn =
     dplyr::select(order(colnames(.))) %>%
     as.matrix() # mixture
   y <- dat_in$y %>%
-    dplyr::select(ends_with(as.character(0:9))) %>%
+    dplyr::select(dplyr::ends_with(as.character(0:9))) %>%
     dplyr::select(order(colnames(.))) %>%
     as.matrix() # base
 
@@ -402,7 +402,7 @@ my.gelman.diag <- function(x, confidence = 0.95, multivariate = TRUE) {
   R2.fixed <- (Niter - 1)/Niter
   R2.random <- (1 + 1/Nchain) * (1/Niter) * (b/w)
   R2.estimate <- R2.fixed + R2.random
-  R2.upper <- R2.fixed + qf((1 + confidence)/2, B.df, W.df) *
+  R2.upper <- R2.fixed + stats::qf((1 + confidence)/2, B.df, W.df) *
     R2.random
   psrf <- cbind(sqrt(df.adj * R2.estimate), sqrt(df.adj * R2.upper))
   dimnames(psrf) <- list(xnames, c("Point est.", "Upper C.I."))
@@ -412,7 +412,7 @@ my.gelman.diag <- function(x, confidence = 0.95, multivariate = TRUE) {
 }
 
 
-utils::globalVariables(c(".", "ch", "chain", "itr", "name_fac", "value"))
+utils::globalVariables(c(".", "ch", "chain", "itr", "name_fac", "value", "group", "grp_fac"))
 
 
 

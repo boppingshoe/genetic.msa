@@ -69,7 +69,7 @@ tr_plot <- function (mdl_out, trace_obj, pop_info = NULL) {
 
 }
 
-utils::globalVariables(c("ch", "itr", "name", "value"))
+utils::globalVariables(c("ch", "itr", "name", "value", "p"))
 
 
 

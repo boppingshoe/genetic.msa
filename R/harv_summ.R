@@ -68,3 +68,9 @@ harv_summ <- function(mdl_out, mdl_dat) {
 }
 
 
+utils::globalVariables(c("sstc_coll", "sstc", "p"))
+
+
+
+
+

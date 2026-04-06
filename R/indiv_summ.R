@@ -279,6 +279,7 @@ indiv_summ <- function(mdl_out, mdl_dat) {
 }
 
 
+utils::globalVariables(c("inferred_repunit", "scaled_likelihood", "outcome", "tp", "fn", "fp", "tn", "m"))
 
 
 
