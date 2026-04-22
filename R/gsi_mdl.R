@@ -278,7 +278,7 @@ gsi_mdl <- function(dat_in, nreps, nburn, thin, nchains, nadapt = 0, keep_burn =
       ci.05 = stats::quantile(value, 0.05),
       ci.95 = stats::quantile(value, 0.95),
       p0 = {if (mean(harvest) == 0) mean(value < 5e-7)
-        else mean(value < (0.5/ max(1, mean(harvest) * mean)))},
+        else mean(value < (0.5/ max(1, mean(harvest))))},
       .by = group
     ) %>%
     dplyr::left_join({
