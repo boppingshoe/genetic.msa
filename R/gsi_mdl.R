@@ -260,10 +260,21 @@ gsi_mdl <- function(dat_in, nreps, nburn, thin, nchains, nadapt = 0, keep_burn =
     lapply(out_list, function(ol) ol[[2]]) %>%
     dplyr::bind_rows()
 
-  iden_tbl <- idens %>%
+  # iden_tbl <- idens %>%
+  #   dplyr::filter(itr > nburn) %>%
+  #   dplyr::select(-c(itr, ch)) %>%
+  #   apply(., 1, function(ids) table(factor(ids, levels = seq(K + H)))) %>%
+  #   rowsum(., dat_in$groups$repunit) %>%
+  #   t()
+
+  sstc <-
+    lapply(out_list, function(ol) ol[[3]]) %>%
+    dplyr::bind_rows()
+
+  sstc_tbl <- sstc %>%
     dplyr::filter(itr > nburn) %>%
     dplyr::select(-c(itr, ch)) %>%
-    apply(., 1, function(ids) table(factor(ids, levels = seq(K + H)))) %>%
+    t() %>%
     rowsum(., dat_in$groups$repunit) %>%
     t()
 
@@ -282,7 +293,8 @@ gsi_mdl <- function(dat_in, nreps, nburn, thin, nchains, nadapt = 0, keep_burn =
       .by = group
     ) %>%
     dplyr::left_join({
-      apply(iden_tbl, 2, function(ct) mean(ct == 0)) %>%
+      # apply(iden_tbl, 2, function(ct) mean(ct == 0)) %>%
+      apply(sstc_tbl, 2, function(ct) mean(ct == 0)) %>%
         tibble::enframe(name = "group", value = 'z0')
     }, by = "group") %>%
     dplyr::mutate(
@@ -326,9 +338,9 @@ gsi_mdl <- function(dat_in, nreps, nburn, thin, nchains, nadapt = 0, keep_burn =
 
   out$idens <- idens
 
-  out$sstc_trace <-
-    lapply(out_list, function(ol) ol[[3]]) %>%
-    dplyr::bind_rows()
+  out$sstc_trace <- sstc
+    # lapply(out_list, function(ol) ol[[3]]) %>%
+    # dplyr::bind_rows()
 
   out$groups <- dat_in$groups
 
