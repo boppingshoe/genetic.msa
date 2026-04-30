@@ -63,6 +63,7 @@ harv_summ <- function(mdl_out, mdl_dat) {
                      sd_p = stats::sd(p),
                      ci05_p = stats::quantile(p, 0.05),
                      ci95_p = stats::quantile(p, 0.95),
+                     z0 = mean(sstc == 0),
                      .by = repunit)
 
 }
